@@ -154,16 +154,16 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
 
   /* Cipher suites */
   ja4->ja4_ciphers = NULL;
-  ja4->ja4_ciphers_char_sz = 0;
+  ja4->ja4_ciphers_sz = 0;
   /*
   Allocate memory for and populate a list of ciphers from 'c->ssl->ciphers'.
   The resulting ciphers are stored in host byte
   order in 'ja4->ciphers'. If memory allocation fails, the function returns NGX_DECLINED.
   */
-  if (c->ssl->ja4_ciphers && c->ssl->ja4_ciphers_char_sz)
+  if (c->ssl->ja4_ciphers && c->ssl->ja4_ciphers_sz)
   {
     // Allocate memory for the array of cipher strings
-    len = c->ssl->ja4_ciphers_char_sz * sizeof(char *);
+    len = c->ssl->ja4_ciphers_sz * sizeof(char *);
     ja4->ja4_ciphers = ngx_pnalloc(pool, len);
     if (ja4->ja4_ciphers == NULL)
     {
@@ -171,16 +171,16 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
     }
 
     // Add c->ssl->ciphers to ja4->ciphers
-    for (i = 0; i < c->ssl->ja4_ciphers_char_sz; ++i)
+    for (i = 0; i < c->ssl->ja4_ciphers_sz; ++i)
     {
       size_t hex_str_len = strlen(c->ssl->ja4_ciphers[i]) + 1; // +1 for null terminator
 
       // Allocate memory for the hex string and copy it
-      ja4->ja4_ciphers[ja4->ja4_ciphers_char_sz] = ngx_pnalloc(pool, hex_str_len);
-      if (ja4->ja4_ciphers[ja4->ja4_ciphers_char_sz] == NULL)
+      ja4->ja4_ciphers[ja4->ja4_ciphers_sz] = ngx_pnalloc(pool, hex_str_len);
+      if (ja4->ja4_ciphers[ja4->ja4_ciphers_sz] == NULL)
       {
         // Handle allocation failure and clean up previously allocated memory
-        for (size_t j = 0; j < ja4->ja4_ciphers_char_sz; j++)
+        for (size_t j = 0; j < ja4->ja4_ciphers_sz; j++)
         {
           ngx_pfree(pool, ja4->ja4_ciphers[j]);
         }
@@ -188,16 +188,16 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
         ja4->ja4_ciphers = NULL;
         return NGX_DECLINED;
       }
-      ngx_memcpy(ja4->ja4_ciphers[ja4->ja4_ciphers_char_sz], c->ssl->ja4_ciphers[i], hex_str_len);
-      ja4->ja4_ciphers_char_sz++;
+      ngx_memcpy(ja4->ja4_ciphers[ja4->ja4_ciphers_sz], c->ssl->ja4_ciphers[i], hex_str_len);
+      ja4->ja4_ciphers_sz++;
     }
 
     /* Now, let's sort the ja4->ciphers array */
-    qsort(ja4->ja4_ciphers, ja4->ja4_ciphers_char_sz, sizeof(char *), compare_hexes);
+    qsort(ja4->ja4_ciphers, ja4->ja4_ciphers_sz, sizeof(char *), compare_hexes);
   }
 
   // Check if we got ciphers
-  if (ja4->ja4_ciphers && ja4->ja4_ciphers_char_sz)
+  if (ja4->ja4_ciphers && ja4->ja4_ciphers_sz)
   {
     // SHA256_DIGEST_LENGTH should be 32 bytes (256 bits)
     unsigned char hash_result[SHA256_DIGEST_LENGTH];
@@ -207,11 +207,11 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
     SHA256_Init(&sha256);
 
     // Iterate each cipher and add data to the context
-    for (i = 0; i < ja4->ja4_ciphers_char_sz; i++)
+    for (i = 0; i < ja4->ja4_ciphers_sz; i++)
     {
       SHA256_Update(&sha256, ja4->ja4_ciphers[i], strlen(ja4->ja4_ciphers[i]));
       // Add a comma separator between ciphers
-      if (i < ja4->ja4_ciphers_char_sz - 1)
+      if (i < ja4->ja4_ciphers_sz - 1)
       {
         SHA256_Update(&sha256, ",", 1);
       }
@@ -472,13 +472,13 @@ void ngx_ssl_ja4_fp(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   out->data[cur++] = ja4->has_sni;
 
   // 2 character count of ciphers
-  if (ja4->ja4_ciphers_char_sz == 0)
+  if (ja4->ja4_ciphers_sz == 0)
   {
     ngx_snprintf(out->data + cur, 3, "00");
   }
   else
   {
-    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_char_sz);
+    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_sz);
   }
   cur += 2;
 
@@ -570,11 +570,11 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   }
 
   // Initial size calculation
-  // Base size for fixed elements: 't', version (2 chars), has_sni, ja4_ciphers_char_sz (2 chars), ja4_extensions_char_sz (2 chars),
+  // Base size for fixed elements: 't', version (2 chars), has_sni, ja4_ciphers_sz (2 chars), ja4_extensions_char_sz (2 chars),
   // alpn (2 chars), separators ('_' x3), null-terminator
   size_t len = 1 + 2 + 1 + 2 + 2 + 2 + 3 + 1;
   // Dynamic size for variable elements: ciphers, extensions, signature algorithms
-  for (size_t i = 0; i < ja4->ja4_ciphers_char_sz; ++i)
+  for (size_t i = 0; i < ja4->ja4_ciphers_sz; ++i)
   {
     len += strlen(ja4->ja4_ciphers[i]) + 1; // strlen of cipher + comma
   }
@@ -617,13 +617,13 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   out->data[cur++] = ja4->has_sni;
 
   // 2 character count of ciphers
-  if (ja4->ja4_ciphers_char_sz == 0)
+  if (ja4->ja4_ciphers_sz == 0)
   {
     ngx_snprintf(out->data + cur, 3, "00");
   }
   else
   {
-    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_char_sz);
+    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_sz);
   }
   cur += 2;
 
@@ -653,9 +653,9 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   out->data[cur++] = '_';
 
   // Add ciphers
-  if (ja4->ja4_ciphers_char_sz > 0)
+  if (ja4->ja4_ciphers_sz > 0)
   {
-    for (size_t i = 0; i < ja4->ja4_ciphers_char_sz; ++i)
+    for (size_t i = 0; i < ja4->ja4_ciphers_sz; ++i)
     {
       size_t n = ngx_snprintf(out->data + cur, strlen(ja4->ja4_ciphers[i]) + 2, "%s,", ja4->ja4_ciphers[i]) - out->data - cur;
       cur += n;
@@ -764,13 +764,13 @@ void ngx_ssl_ja4one_fp(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   out->data[cur++] = ja4->has_sni;
 
   // 2 character count of ciphers
-  if (ja4->ja4_ciphers_char_sz == 0)
+  if (ja4->ja4_ciphers_sz == 0)
   {
     ngx_snprintf(out->data + cur, 3, "00");
   }
   else
   {
-    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_char_sz);
+    ngx_snprintf(out->data + cur, 3, "%02zu", ja4->ja4_ciphers_sz);
   }
   cur += 2;
 
