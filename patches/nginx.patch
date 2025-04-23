@@ -8,7 +8,7 @@ index 104e8daf7..9f5200c91 100644
  
 +// adds ciphers to the ssl object for ja4 fingerprint
 +ngx_int_t
-+ngx_SSL_client_features_ja4_(ngx_connection_t *c) {
++ngx_SSL_client_features_ja4(ngx_connection_t *c) {
 +
 +    SSL                           *s = NULL;
 +
