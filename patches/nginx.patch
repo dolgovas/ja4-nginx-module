@@ -8,7 +8,7 @@ index 104e8daf7..9f5200c91 100644
  
 +// adds ciphers to the ssl object for ja4 fingerprint
 +ngx_int_t
-+ngx_SSL_client_features(ngx_connection_t *c) {
++ngx_SSL_client_features_ja4_(ngx_connection_t *c) {
 +
 +    SSL                           *s = NULL;
 +
@@ -18,24 +18,24 @@ index 104e8daf7..9f5200c91 100644
 +    s = c->ssl->connection;
 +
 +    /* Cipher suites */
-+    c->ssl->ciphers = NULL;
++    c->ssl->ja4_ciphers = NULL;
 +    STACK_OF(SSL_CIPHER) *ciphers = SSL_get_client_ciphers(s);
 +
 +    if (ciphers == NULL) {
 +        return NGX_ERROR; // Handle error
 +    }
 +
-+    c->ssl->ciphers_sz = sk_SSL_CIPHER_num(ciphers);
++    c->ssl->ja4_ciphers_sz = sk_SSL_CIPHER_num(ciphers);
 +
-+    if (c->ssl->ciphers_sz) {
++    if (c->ssl->ja4_ciphers_sz) {
 +        // Allocate memory for the array of cipher strings
-+        c->ssl->ciphers = ngx_pnalloc(c->pool, c->ssl->ciphers_sz * sizeof(char *));
-+        if (c->ssl->ciphers == NULL) {
++        c->ssl->ja4_ciphers = ngx_pnalloc(c->pool, c->ssl->ja4_ciphers_sz * sizeof(char *));
++        if (c->ssl->ja4_ciphers == NULL) {
 +            return NGX_ERROR; // Handle allocation failure
 +        }
 +
 +        // Convert each cipher suite to a hexadecimal string and store it
-+        for (size_t i = 0; i < c->ssl->ciphers_sz; i++) {
++        for (size_t i = 0; i < c->ssl->ja4_ciphers_sz; i++) {
 +            const SSL_CIPHER *cipher = sk_SSL_CIPHER_value(ciphers, i);
 +            if (cipher == NULL) {
 +                return NGX_ERROR; // Handle error
@@ -56,7 +56,7 @@ index 104e8daf7..9f5200c91 100644
 +            snprintf(hex_str, sizeof(hex_str), "%02x%02x", cipher_id_bytes[0], cipher_id_bytes[1]);
 +
 +            // Allocate memory for the hex string and copy it
-+            c->ssl->ciphers[i] = ngx_pnalloc(c->pool, sizeof(hex_str));
++            c->ssl->ja4_ciphers[i] = ngx_pnalloc(c->pool, sizeof(hex_str));
 +            if (c->ssl->ciphers[i] == NULL) {
 +                // Handle allocation failure and clean up previously allocated memory
 +                for (size_t j = 0; j < i; j++) {
@@ -66,7 +66,7 @@ index 104e8daf7..9f5200c91 100644
 +                c->ssl->ciphers = NULL;
 +                return NGX_ERROR;
 +            }
-+            ngx_memcpy(c->ssl->ciphers[i], hex_str, sizeof(hex_str));
++            ngx_memcpy(c->ssl->ja4_ciphers[i], hex_str, sizeof(hex_str));
 +        }
 +    }
 +
@@ -109,7 +109,7 @@ index 104e8daf7..9f5200c91 100644
 +}
 +// adds extensions to the ssl object for ja4 fingerprint
 +int
-+ngx_SSL_early_cb_fn(SSL *s, int *al, void *arg) {
++ngx_SSL_early_cb_fn_ja4(SSL *s, int *al, void *arg) {
 +
 +    int                            got_extensions;
 +    int                           *ext_out;
@@ -126,8 +126,8 @@ index 104e8daf7..9f5200c91 100644
 +        return 1;
 +    }
 +
-+    c->ssl->extensions_sz = 0;
-+    c->ssl->extensions = NULL;
++    c->ssl->ja4_extensions_sz = 0;
++    c->ssl->ja4_extensions = NULL;
 +    got_extensions = SSL_client_hello_getall_extensions_present(s,
 +                                                       &ext_out,
 +                                                       &ext_len);
@@ -142,14 +142,14 @@ index 104e8daf7..9f5200c91 100644
 +        return 1;
 +    }
 +
-+    c->ssl->extensions = ngx_palloc(c->pool, sizeof(char *) * ext_len);
-+    if (c->ssl->extensions != NULL) {
++    c->ssl->ja4_extensions = ngx_palloc(c->pool, sizeof(char *) * ext_len);
++    if (c->ssl->ja4_extensions != NULL) {
 +        for (size_t i = 0; i < ext_len; i++) {
 +            char hex_str[6];  // Buffer to hold the hexadecimal string (4 digits + null terminator)
 +            snprintf(hex_str, sizeof(hex_str), "%04x", ext_out[i]);
 +            
 +            // Allocate memory for the hex string and copy it
-+            c->ssl->extensions[i] = ngx_pnalloc(c->pool, sizeof(hex_str));
++            c->ssl->ja4_extensions[i] = ngx_pnalloc(c->pool, sizeof(hex_str));
 +            if (c->ssl->extensions[i] == NULL) {
 +                // Handle allocation failure and clean up previously allocated memory
 +                for (size_t j = 0; j < i; j++) {
@@ -159,13 +159,13 @@ index 104e8daf7..9f5200c91 100644
 +                c->ssl->extensions = NULL;
 +                return 1;
 +            }
-+            ngx_memcpy(c->ssl->extensions[i], hex_str, sizeof(hex_str));
++            ngx_memcpy(c->ssl->ja4_extensions[i], hex_str, sizeof(hex_str));
 +        }
-+        c->ssl->extensions_sz = ext_len;
++        c->ssl->ja4_extensions_sz = ext_len;
 +    }
 +
 +    for (size_t i = 0; i < ext_len; i++) {
-+        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0, "c->ssl->extensions[%zu] = %s", i, c->ssl->extensions[i]);
++        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0, "c->ssl->ja4_extensions[%zu] = %s", i, c->ssl->ja4_extensions[i]);
 +    }
 +
 +    OPENSSL_free(ext_out);
@@ -181,7 +181,7 @@ index 104e8daf7..9f5200c91 100644
      ngx_ssl_clear_error(c->log);
  
 +    // client hello callback function on the session context, ja4 extensions
-+    SSL_CTX_set_client_hello_cb(c->ssl->session_ctx, ngx_SSL_early_cb_fn, c);
++    SSL_CTX_set_client_hello_cb(c->ssl->session_ctx, ngx_SSL_early_cb_fn_ja4, c);
 +
      n = SSL_do_handshake(c->ssl->connection);
  
@@ -191,27 +191,26 @@ index 104e8daf7..9f5200c91 100644
      if (n == 1) {
 -
 +        // ja4 cipher suites
-+        ngx_SSL_client_features(c);
++        ngx_SSL_client_features_ja4(c);
          if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
              return NGX_ERROR;
          }
-diff --git a/src/event/ngx_event_openssl.h b/src/event/ngx_event_openssl.h
-index 860ea26dd..843020703 100644
+diff -ruN a/src/event/ngx_event_openssl.h b/src/event/ngx_event_openssl.h
 --- a/src/event/ngx_event_openssl.h
 +++ b/src/event/ngx_event_openssl.h
-@@ -120,6 +120,24 @@ struct ngx_ssl_connection_s {
-     unsigned                    in_ocsp:1;
-     unsigned                    early_preread:1;
-     unsigned                    write_blocked:1;
+@@ -147,6 +147,24 @@
+     size_t                      point_formats_sz;
+     unsigned char              *point_formats;
+ /* ----- JA3 HACK END -------------------------------------------------------*/
 +
 +    // ja4
 +    int             version;
 +
-+    size_t          ciphers_sz;
-+    char **ciphers;
++    size_t          ja4_ciphers_sz;
++    char          **ja4_ciphers;
 +
-+    size_t          extensions_sz;
-+    char **extensions;
++    size_t          ja4_extensions_sz;
++    char          **ja4_extensions;
 +
 +    size_t          sigalgs_sz;
 +    char   **sigalgs_hash_values; // Array to store combined hash values like 0x0601
@@ -222,8 +221,8 @@ index 860ea26dd..843020703 100644
 +    uint16_t handshake_roundtrip_microseconds; // a whole number - max is probably thousands
 +    uint8_t ttl; // time to live - a whole number - max is 255
  };
- 
- 
+
+
 diff --git a/src/http/modules/ngx_http_ssl_module.c b/src/http/modules/ngx_http_ssl_module.c
 index 4c4a598b1..93b7c4f5f 100644
 --- a/src/http/modules/ngx_http_ssl_module.c
