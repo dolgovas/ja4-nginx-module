@@ -232,23 +232,23 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
 
   /* Extensions */
   ja4->ja4_extensions = NULL;
-  ja4->ja4_extensions_char_sz = 0;
+  ja4->ja4_extensions_sz = 0;
   ja4->extensions_count = 0;
 
   // extensions_no_psk
   // no need for sz here bc not counting ignored extensions
   ja4->extensions_no_psk = NULL;
   ja4->extensions_no_psk_count = 0;
-  if (c->ssl->ja4_extensions_char_sz && c->ssl->ja4_extensions)
+  if (c->ssl->ja4_extensions_sz && c->ssl->ja4_extensions)
   {
-    len = c->ssl->ja4_extensions_char_sz * sizeof(char *);
+    len = c->ssl->ja4_extensions_sz * sizeof(char *);
     ja4->ja4_extensions = ngx_pnalloc(pool, len);
     ja4->extensions_no_psk = ngx_pnalloc(pool, len);
     if (ja4->ja4_extensions == NULL)
     {
       return NGX_DECLINED;
     }
-    for (i = 0; i < c->ssl->ja4_extensions_char_sz; ++i)
+    for (i = 0; i < c->ssl->ja4_extensions_sz; ++i)
     {
       if (!ngx_ssl_ja4_is_ext_greased(c->ssl->ja4_extensions[i]))
 
@@ -263,11 +263,11 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
         {
 
           // Allocate memory for the extension string and copy it
-          ja4->ja4_extensions[ja4->ja4_extensions_char_sz] = ngx_pnalloc(pool, ext_len);
-          if (ja4->ja4_extensions[ja4->ja4_extensions_char_sz] == NULL)
+          ja4->ja4_extensions[ja4->ja4_extensions_sz] = ngx_pnalloc(pool, ext_len);
+          if (ja4->ja4_extensions[ja4->ja4_extensions_sz] == NULL)
           {
             // Handle allocation failure and clean up previously allocated memory
-            for (size_t j = 0; j < ja4->ja4_extensions_char_sz; j++)
+            for (size_t j = 0; j < ja4->ja4_extensions_sz; j++)
             {
               ngx_pfree(pool, ja4->ja4_extensions[j]);
             }
@@ -275,8 +275,8 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
             ja4->ja4_extensions = NULL;
             return NGX_DECLINED;
           }
-          ngx_memcpy(ja4->ja4_extensions[ja4->ja4_extensions_char_sz], ext, ext_len);
-          ja4->ja4_extensions_char_sz++;
+          ngx_memcpy(ja4->ja4_extensions[ja4->ja4_extensions_sz], ext, ext_len);
+          ja4->ja4_extensions_sz++;
         }
         // for no psk ignored extensions are not counted, not hashed
         if (ngx_ssl_ja4_is_ext_ignored(c->ssl->ja4_extensions[i]))
@@ -307,7 +307,7 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
     }
     /* Now, let's sort the ja4->extensions array */
     // what is going on with the mem alloc in these arguments...
-    qsort(ja4->ja4_extensions, ja4->ja4_extensions_char_sz, sizeof(char *), compare_hexes);
+    qsort(ja4->ja4_extensions, ja4->ja4_extensions_sz, sizeof(char *), compare_hexes);
     // sort extensions_no_psk
     qsort(ja4->extensions_no_psk, ja4->extensions_no_psk_count, sizeof(char *), compare_hexes);
   }
@@ -346,7 +346,7 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
   }
 
   // generate hash for extensions
-  if (ja4->ja4_extensions && ja4->ja4_extensions_char_sz)
+  if (ja4->ja4_extensions && ja4->ja4_extensions_sz)
   {
     unsigned char hash_result[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
@@ -355,10 +355,10 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
       return NGX_DECLINED;
     }
 
-    for (i = 0; i < ja4->ja4_extensions_char_sz; i++)
+    for (i = 0; i < ja4->ja4_extensions_sz; i++)
     {
       SHA256_Update(&sha256, ja4->ja4_extensions[i], strlen(ja4->ja4_extensions[i]));
-      if (i < ja4->ja4_extensions_char_sz - 1)
+      if (i < ja4->ja4_extensions_sz - 1)
       {
         SHA256_Update(&sha256, ",", 1);
       }
@@ -570,7 +570,7 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   }
 
   // Initial size calculation
-  // Base size for fixed elements: 't', version (2 chars), has_sni, ja4_ciphers_sz (2 chars), ja4_extensions_char_sz (2 chars),
+  // Base size for fixed elements: 't', version (2 chars), has_sni, ja4_ciphers_sz (2 chars), ja4_extensions_sz (2 chars),
   // alpn (2 chars), separators ('_' x3), null-terminator
   size_t len = 1 + 2 + 1 + 2 + 2 + 2 + 3 + 1;
   // Dynamic size for variable elements: ciphers, extensions, signature algorithms
@@ -578,7 +578,7 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   {
     len += strlen(ja4->ja4_ciphers[i]) + 1; // strlen of cipher + comma
   }
-  for (size_t i = 0; i < ja4->ja4_extensions_char_sz; ++i)
+  for (size_t i = 0; i < ja4->ja4_extensions_sz; ++i)
   {
     len += strlen(ja4->ja4_extensions[i]) + 1; // strlen of extension + comma
   }
@@ -667,9 +667,9 @@ void ngx_ssl_ja4_fp_string(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4, ngx_str_t *out)
   out->data[cur++] = '_';
 
   // Add extensions
-  if (ja4->ja4_extensions_char_sz > 0)
+  if (ja4->ja4_extensions_sz > 0)
   {
-    for (size_t i = 0; i < ja4->ja4_extensions_char_sz; ++i)
+    for (size_t i = 0; i < ja4->ja4_extensions_sz; ++i)
     {
       size_t n = ngx_snprintf(out->data + cur, strlen(ja4->ja4_extensions[i]) + 2, "%s,", ja4->ja4_extensions[i]) - out->data - cur;
       cur += n;
