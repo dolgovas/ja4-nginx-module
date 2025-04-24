@@ -176,8 +176,8 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
             size_t hex_str_len = strlen(c->ssl->ja4_ciphers[i]) + 1; // +1 for null terminator
 
             // Allocate memory for the hex string and copy it
-            ja4->ja4_ciphers[ja4->ja4_ciphers_sz[ = ngx_pnalloc(pool, hex_str_len);
-            if (ja4->ja4_ciphers[ja4->ja4_ciphers_sz[ == NULL)
+            ja4->ja4_ciphers[ja4->ja4_ciphers_sz] = ngx_pnalloc(pool, hex_str_len);
+            if (ja4->ja4_ciphers[ja4->ja4_ciphers_sz] == NULL)
             {
                 // Handle allocation failure and clean up previously allocated memory
                 for (size_t j = 0; j < ja4->ja4_ciphers_sz; j++)
@@ -188,7 +188,7 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
                 ja4->ja4_ciphers = NULL;
                 return NGX_DECLINED;
             }
-            ngx_memcpy(ja4->ja4_ciphers[ja4->ja4_ciphers_sz[, c->ssl->ja4_ciphers[i], hex_str_len);
+            ngx_memcpy(ja4->ja4_ciphers[ja4->ja4_ciphers_sz], c->ssl->ja4_ciphers[i], hex_str_len);
             ja4->ja4_ciphers_sz++;
         }
 
