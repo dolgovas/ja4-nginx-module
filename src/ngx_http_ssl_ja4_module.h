@@ -5,129 +5,129 @@
 // STRUCTS
 typedef struct ngx_ssl_ja4_s
 {
-  char *version; // TLS version
+    char *version; // TLS version
 
-  unsigned char transport; // 'q' for QUIC, 't' for TCP
+    unsigned char transport; // 'q' for QUIC, 't' for TCP
 
-  unsigned char has_sni; // 'd' if SNI is present, 'i' otherwise
+    unsigned char has_sni; // 'd' if SNI is present, 'i' otherwise
 
-  size_t ja4_ciphers_sz; // Count of ciphers
-  char **ja4_ciphers;    // List of ciphers
+    size_t ja4_ciphers_sz; // Count of ciphers
+    char **ja4_ciphers;    // List of ciphers
 
-  // size according to ja4 spec, can be 1-2 larger than extensions_sz
-  size_t extensions_count; // Count of extensions including ignored extensions (ALPN, SNI)
-  // actual size of extensions array
-  size_t ja4_extensions_sz; // Count of extensions NOT including ignored extensions (ALPN, SNI), for mem alloc etc
-  char **ja4_extensions;    // List of extensions
+    // size according to ja4 spec, can be 1-2 larger than extensions_sz
+    size_t extensions_count; // Count of extensions including ignored extensions (ALPN, SNI)
+    // actual size of extensions array
+    size_t ja4_extensions_sz; // Count of extensions NOT including ignored extensions (ALPN, SNI), for mem alloc etc
+    char **ja4_extensions;    // List of extensions
 
-  // JA4one
-  size_t extensions_no_psk_count; // Count of extensions including GREASE values
-  char **extensions_no_psk;       // List of extensions including GREASE values
+    // JA4one
+    size_t extensions_no_psk_count; // Count of extensions including GREASE values
+    char **extensions_no_psk;       // List of extensions including GREASE values
 
-  // this hash does not include signature algorithms for the time being
-  char extension_hash_no_psk[65];           // Full SHA256 hash (32 bytes * 2 characters/byte + 1 for '\0')
-  char extension_hash_no_psk_truncated[13]; // Truncated SHA256 hash (12 bytes * 2 characters/byte + 1 for '\0')
+    // this hash does not include signature algorithms for the time being
+    char extension_hash_no_psk[65];           // Full SHA256 hash (32 bytes * 2 characters/byte + 1 for '\0')
+    char extension_hash_no_psk_truncated[13]; // Truncated SHA256 hash (12 bytes * 2 characters/byte + 1 for '\0')
 
-  size_t sigalgs_sz; // Count of signature algorithms
-  char **sigalgs;    // List of signature algorithms
+    size_t sigalgs_sz; // Count of signature algorithms
+    char **sigalgs;    // List of signature algorithms
 
-  // For the first and last ALPN extension values
-  char *alpn_first_value;
+    // For the first and last ALPN extension values
+    char *alpn_first_value;
 
-  char cipher_hash[65];           // 32 bytes * 2 characters/byte + 1 for '\0'
-  char cipher_hash_truncated[13]; // 12 bytes * 2 characters/byte + 1 for '\0'
+    char cipher_hash[65];           // 32 bytes * 2 characters/byte + 1 for '\0'
+    char cipher_hash_truncated[13]; // 12 bytes * 2 characters/byte + 1 for '\0'
 
-  char extension_hash[65];           // 32 bytes * 2 characters/byte + 1 for '\0'
-  char extension_hash_truncated[13]; // 6 bytes * 2 characters/byte + 1 for '\0'
+    char extension_hash[65];           // 32 bytes * 2 characters/byte + 1 for '\0'
+    char extension_hash_truncated[13]; // 6 bytes * 2 characters/byte + 1 for '\0'
 
 } ngx_ssl_ja4_t;
 
 typedef struct ngx_ssl_ja4s_s
 {
-  char *version; // TLS version
+    char *version; // TLS version
 
-  unsigned char transport; // 'q' for QUIC, 't' for TCP
+    unsigned char transport; // 'q' for QUIC, 't' for TCP
 
-  // Cipher suite chosen by the server in hex
-  char chosen_cipher_suite[5]; // Assuming 4 hex characters + null terminator
+    // Cipher suite chosen by the server in hex
+    char chosen_cipher_suite[5]; // Assuming 4 hex characters + null terminator
 
-  size_t extensions_sz;       // Count of extensions
-  unsigned short *extensions; // List of extensions
+    size_t ja4_extensions_sz;       // Count of extensions
+    unsigned short *ja4_extensions; // List of extensions
 
-  // For the ALPN chosen by the server
-  unsigned char alpn_chosen_first; // First character of the ALPN chosen
-  unsigned char alpn_chosen_last;  // Last character of the ALPN chosen
+    // For the ALPN chosen by the server
+    unsigned char alpn_chosen_first; // First character of the ALPN chosen
+    unsigned char alpn_chosen_last;  // Last character of the ALPN chosen
 
-  char extension_hash[65];           // Full SHA256 hash (32 bytes * 2 characters/byte + 1 for '\0')
-  char extension_hash_truncated[13]; // Truncated SHA256 hash (12 bytes * 2 characters/byte + 1 for '\0')
+    char extension_hash[65];           // Full SHA256 hash (32 bytes * 2 characters/byte + 1 for '\0')
+    char extension_hash_truncated[13]; // Truncated SHA256 hash (12 bytes * 2 characters/byte + 1 for '\0')
 
-  // Raw fingerprint components
-  char *raw_extension_data; // Raw extension data as a string, dynamically allocated
+    // Raw fingerprint components
+    char *raw_extension_data; // Raw extension data as a string, dynamically allocated
 } ngx_ssl_ja4s_t;
 
 typedef struct ngx_ssl_ja4h_s
 {
-  char http_method[3];             // 2 characters for HTTP method + null terminator
-  char http_version[3];            // 2 characters for HTTP version + null terminator
-  unsigned char cookie_presence;   // 'c' for cookie, 'n' for no cookie
-  unsigned char referrer_presence; // 'r' for referrer, 'n' for no referer
-  char num_headers[3];             // 2 characters for number of headers + null terminator
-  char primary_accept_language[5]; // 4 characters for first accept-language code + null terminator
+    char http_method[3];             // 2 characters for HTTP method + null terminator
+    char http_version[3];            // 2 characters for HTTP version + null terminator
+    unsigned char cookie_presence;   // 'c' for cookie, 'n' for no cookie
+    unsigned char referrer_presence; // 'r' for referrer, 'n' for no referer
+    char num_headers[3];             // 2 characters for number of headers + null terminator
+    char primary_accept_language[5]; // 4 characters for first accept-language code + null terminator
 
-  char http_header_hash[13];  // 12 characters for truncated sha256 hash of HTTP headers + null terminator
-  char cookie_field_hash[13]; // 12 characters for truncated sha256 hash of cookie fields + null terminator
-  char cookie_value_hash[13]; // 12 characters for truncated sha256 hash of cookie fields+values + null terminator
+    char http_header_hash[13];  // 12 characters for truncated sha256 hash of HTTP headers + null terminator
+    char cookie_field_hash[13]; // 12 characters for truncated sha256 hash of cookie fields + null terminator
+    char cookie_value_hash[13]; // 12 characters for truncated sha256 hash of cookie fields+values + null terminator
 
-  // Raw data fields for the -r and -o options
-  char *raw_http_headers;  // Dynamically allocated string for raw HTTP headers
-  char *raw_cookie_fields; // Dynamically allocated string for raw cookie fields
-  char *raw_cookie_values; // Dynamically allocated string for raw cookie field values
+    // Raw data fields for the -r and -o options
+    char *raw_http_headers;  // Dynamically allocated string for raw HTTP headers
+    char *raw_cookie_fields; // Dynamically allocated string for raw cookie fields
+    char *raw_cookie_values; // Dynamically allocated string for raw cookie field values
 } ngx_ssl_ja4h_t;
 
 typedef struct ngx_ssl_ja4t_s
 {
-  unsigned int window_size;         // TCP Window Size
-  unsigned int window_size_present; // Flag to indicate if window size is present
+    unsigned int window_size;         // TCP Window Size
+    unsigned int window_size_present; // Flag to indicate if window size is present
 
-  u_char tcp_options[40];    // TCP Options (max 40 bytes as a safe upper limit)
-  size_t tcp_options_length; // Length of the TCP options used
+    u_char tcp_options[40];    // TCP Options (max 40 bytes as a safe upper limit)
+    size_t tcp_options_length; // Length of the TCP options used
 
-  unsigned int mss_value;         // MSS Value
-  unsigned int mss_value_present; // Flag to indicate if MSS value is present
+    unsigned int mss_value;         // MSS Value
+    unsigned int mss_value_present; // Flag to indicate if MSS value is present
 
-  unsigned int window_scale;         // Window Scale
-  unsigned int window_scale_present; // Flag to indicate if window scale is present
+    unsigned int window_scale;         // Window Scale
+    unsigned int window_scale_present; // Flag to indicate if window scale is present
 } ngx_ssl_ja4t_t;
 
 typedef struct ngx_ssl_ja4ts_s
 {
-  unsigned int window_size;  // TCP Window Size
-  u_char tcp_options[40];    // TCP Options (max 40 bytes as a safe upper limit)
-  unsigned int mss_value;    // MSS Value
-  unsigned int window_scale; // Window Scale
+    unsigned int window_size;  // TCP Window Size
+    u_char tcp_options[40];    // TCP Options (max 40 bytes as a safe upper limit)
+    unsigned int mss_value;    // MSS Value
+    unsigned int window_scale; // Window Scale
 
-  unsigned int synack_retrans_count;   // Count of SYNACK TCP retransmissions
-  unsigned int synack_time_delays[10]; // Time delays between each retransmission, max 10
-  unsigned int rst_flag;               // Flag to indicate if RST is sent
+    unsigned int synack_retrans_count;   // Count of SYNACK TCP retransmissions
+    unsigned int synack_time_delays[10]; // Time delays between each retransmission, max 10
+    unsigned int rst_flag;               // Flag to indicate if RST is sent
 } ngx_ssl_ja4ts_t;
 
 typedef struct ngx_ssl_ja4x_s
 {
-  char issuer_rdns_hash[13];  // 12 characters for truncated sha256 hash of Issuer RDNs + null terminator
-  char subject_rdns_hash[13]; // 12 characters for truncated sha256 hash of Subject RDNs + null terminator
-  char extensions_hash[13];   // 12 characters for truncated sha256 hash of Extensions + null terminator
+    char issuer_rdns_hash[13];  // 12 characters for truncated sha256 hash of Issuer RDNs + null terminator
+    char subject_rdns_hash[13]; // 12 characters for truncated sha256 hash of Subject RDNs + null terminator
+    char extensions_hash[13];   // 12 characters for truncated sha256 hash of Extensions + null terminator
 
-  char *raw_issuer_rdns;  // Dynamically allocated string for raw Issuer RDNs
-  char *raw_subject_rdns; // Dynamically allocated string for raw Subject RDNs
-  char *raw_extensions;   // Dynamically allocated string for raw Extensions
+    char *raw_issuer_rdns;  // Dynamically allocated string for raw Issuer RDNs
+    char *raw_subject_rdns; // Dynamically allocated string for raw Subject RDNs
+    char *raw_extensions;   // Dynamically allocated string for raw Extensions
 } ngx_ssl_ja4x_t;
 
 typedef struct ngx_ssl_ja4l_s
 {
-  uint16_t distance_miles;                   // a whole number - max is in the thousands
-  uint16_t handshake_roundtrip_microseconds; // a whole number - max is probably thousands
-  uint8_t ttl;                               // time to live - a whole number - max is 255
-  uint8_t hop_count;                         // a whole number - max is less than 255
+    uint16_t distance_miles;                   // a whole number - max is in the thousands
+    uint16_t handshake_roundtrip_microseconds; // a whole number - max is probably thousands
+    uint8_t ttl;                               // time to live - a whole number - max is 255
+    uint8_t hop_count;                         // a whole number - max is less than 255
 } ngx_ssl_ja4l_t;
 
 // CONSTANTS
@@ -177,57 +177,57 @@ static const char *EXT_IGNORE[] = {
 
 static int ngx_ssl_ja4_is_ext_dynamic(const char *ext)
 {
-  size_t i;
-  for (i = 0; i < (sizeof(EXT_IGNORE_DYNAMIC) / sizeof(EXT_IGNORE_DYNAMIC[0])); ++i)
-  {
-    if (strcmp(ext, EXT_IGNORE_DYNAMIC[i]) == 0)
+    size_t i;
+    for (i = 0; i < (sizeof(EXT_IGNORE_DYNAMIC) / sizeof(EXT_IGNORE_DYNAMIC[0])); ++i)
     {
-      return 1;
+        if (strcmp(ext, EXT_IGNORE_DYNAMIC[i]) == 0)
+        {
+            return 1;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 static int ngx_ssl_ja4_is_ext_ignored(const char *ext)
 {
-  size_t i;
-  for (i = 0; i < (sizeof(EXT_IGNORE) / sizeof(EXT_IGNORE[0])); ++i)
-  {
-    if (strcmp(ext, EXT_IGNORE[i]) == 0)
+    size_t i;
+    for (i = 0; i < (sizeof(EXT_IGNORE) / sizeof(EXT_IGNORE[0])); ++i)
     {
-      return 1;
+        if (strcmp(ext, EXT_IGNORE[i]) == 0)
+        {
+            return 1;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 static int
 ngx_ssl_ja4_is_ext_greased(const char *ext)
 {
-  size_t i;
-  for (i = 0; i < (sizeof(GREASE) / sizeof(GREASE[0])); ++i)
-  {
-    if (strcmp(ext, GREASE[i]) == 0)
+    size_t i;
+    for (i = 0; i < (sizeof(GREASE) / sizeof(GREASE[0])); ++i)
     {
-      return 1;
+        if (strcmp(ext, GREASE[i]) == 0)
+        {
+            return 1;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 static int compare_hexes(const void *a, const void *b)
 {
-  const char *ext_a = *(const char **)a;
-  const char *ext_b = *(const char **)b;
+    const char *ext_a = *(const char **)a;
+    const char *ext_b = *(const char **)b;
 
-  unsigned int hex_a = strtoul(ext_a, NULL, 16);
-  unsigned int hex_b = strtoul(ext_b, NULL, 16);
+    unsigned int hex_a = strtoul(ext_a, NULL, 16);
+    unsigned int hex_b = strtoul(ext_b, NULL, 16);
 
-  if (hex_a < hex_b)
-    return -1;
-  if (hex_a > hex_b)
-    return 1;
-  return 0;
+    if (hex_a < hex_b)
+        return -1;
+    if (hex_a > hex_b)
+        return 1;
+    return 0;
 }
 
 #if (NGX_DEBUG)
@@ -235,137 +235,137 @@ static void
 ngx_ssl_ja4l_detail_print(ngx_pool_t *pool, ngx_ssl_ja4l_t *ja4l)
 {
 
-  /* Distance in miles */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4l: Distance in miles: %d",
-                 ja4l->distance_miles);
+    /* Distance in miles */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4l: Distance in miles: %d",
+                   ja4l->distance_miles);
 
-  /* Time in microseconds */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4l: Time in microseconds: %d",
-                 ja4l->handshake_roundtrip_microseconds);
+    /* Time in microseconds */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4l: Time in microseconds: %d",
+                   ja4l->handshake_roundtrip_microseconds);
 
-  /* TTL */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4l: TTL: %d",
-                 ja4l->ttl);
+    /* TTL */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4l: TTL: %d",
+                   ja4l->ttl);
 
-  /* Hop Count */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4l: Hop Count: %d",
-                 ja4l->hop_count);
+    /* Hop Count */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4l: Hop Count: %d",
+                   ja4l->hop_count);
 }
 
 static void
 ngx_ssl_ja4_detail_print(ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
 {
-  size_t i;
+    size_t i;
 
-  /* Transport Protocol (QUIC or TCP) */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4: Transport Protocol: %c",
-                 ja4->transport);
+    /* Transport Protocol (QUIC or TCP) */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4: Transport Protocol: %c",
+                   ja4->transport);
 
-  /* SNI presence or absence */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
-                 "ssl_ja4: SNI: %c",
-                 ja4->has_sni);
+    /* SNI presence or absence */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pool->log, 0,
+                   "ssl_ja4: SNI: %c",
+                   ja4->has_sni);
 
-  /* Version */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: Version:  %d\n", ja4->version);
-
-  /* Ciphers */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: ciphers: length: %d\n",
-                 ja4->ja4_ciphers_sz);
-
-  for (i = 0; i < ja4->ja4_ciphers_sz; ++i)
-  {
+    /* Version */
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                   pool->log, 0, "ssl_ja4: |    cipher: %s",
-                   ja4->ja4_ciphers[i]);
-  }
+                   pool->log, 0, "ssl_ja4: Version:  %d\n", ja4->version);
 
-  // cipher hash
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: cipher hash: %s\n",
-                 ja4->cipher_hash);
-
-  // cipher hash truncated
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: cipher hash truncated: %s\n",
-                 ja4->cipher_hash_truncated);
-
-  // extension hash
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extension hash: %s\n",
-                 ja4->extension_hash);
-
-  // extension hash truncated
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extension hash truncated: %s\n",
-                 ja4->extension_hash_truncated);
-
-  // extension hash no psk
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extension hash no psk: %s\n",
-                 ja4->extension_hash_no_psk);
-
-  // extension hash no psk truncated
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extension hash no psk truncated: %s\n",
-                 ja4->extension_hash_no_psk_truncated);
-
-  /* Extensions */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extensions: length: %d\n",
-                 ja4->extensions_count);
-
-  for (i = 0; i < ja4->ja4_extensions_sz; ++i)
-  {
+    /* Ciphers */
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                   pool->log, 0, "ssl_ja4: |    extension: %s",
-                   ja4->ja4_extensions[i]);
-  }
+                   pool->log, 0, "ssl_ja4: ciphers: length: %d\n",
+                   ja4->ja4_ciphers_sz);
 
-  /* Extensions no PSK */
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: extensions_no_psk: length: %d\n",
-                 ja4->extensions_no_psk_count);
+    for (i = 0; i < ja4->ja4_ciphers_sz; ++i)
+    {
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                       pool->log, 0, "ssl_ja4: |    cipher: %s",
+                       ja4->ja4_ciphers[i]);
+    }
 
-  for (i = 0; i < ja4->extensions_no_psk_count; ++i)
-  {
+    // cipher hash
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                   pool->log, 0, "ssl_ja4: |    extension_no_psk: %s",
-                   ja4->extensions_no_psk[i]);
-  }
+                   pool->log, 0, "ssl_ja4: cipher hash: %s\n",
+                   ja4->cipher_hash);
 
-  // Signature Algorithms
-  ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                 pool->log, 0, "ssl_ja4: sigalgs: length: %d\n",
-                 ja4->sigalgs_sz);
-
-  for (i = 0; i < ja4->sigalgs_sz; ++i)
-  {
+    // cipher hash truncated
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-                   pool->log, 0, "ssl_ja4: |    sigalgs: %s",
-                   ja4->sigalgs[i]);
-  }
+                   pool->log, 0, "ssl_ja4: cipher hash truncated: %s\n",
+                   ja4->cipher_hash_truncated);
 
-  /* ALPN Values */
-  // handle if null
-  // if (ja4->alpn_first_value == NULL)
-  // {
-  //     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-  //                    pool->log, 0, "ssl_ja4: ALPN Value: NULL\n");
-  // }
-  // else
-  // {
-  //     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
-  //                    pool->log, 0, "ssl_ja4: ALPN Value: %s\n",
-  //                    ja4->alpn_first_value);
-  // }
+    // extension hash
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extension hash: %s\n",
+                   ja4->extension_hash);
+
+    // extension hash truncated
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extension hash truncated: %s\n",
+                   ja4->extension_hash_truncated);
+
+    // extension hash no psk
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extension hash no psk: %s\n",
+                   ja4->extension_hash_no_psk);
+
+    // extension hash no psk truncated
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extension hash no psk truncated: %s\n",
+                   ja4->extension_hash_no_psk_truncated);
+
+    /* Extensions */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extensions: length: %d\n",
+                   ja4->extensions_count);
+
+    for (i = 0; i < ja4->ja4_extensions_sz; ++i)
+    {
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                       pool->log, 0, "ssl_ja4: |    extension: %s",
+                       ja4->ja4_extensions[i]);
+    }
+
+    /* Extensions no PSK */
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: extensions_no_psk: length: %d\n",
+                   ja4->extensions_no_psk_count);
+
+    for (i = 0; i < ja4->extensions_no_psk_count; ++i)
+    {
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                       pool->log, 0, "ssl_ja4: |    extension_no_psk: %s",
+                       ja4->extensions_no_psk[i]);
+    }
+
+    // Signature Algorithms
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                   pool->log, 0, "ssl_ja4: sigalgs: length: %d\n",
+                   ja4->sigalgs_sz);
+
+    for (i = 0; i < ja4->sigalgs_sz; ++i)
+    {
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+                       pool->log, 0, "ssl_ja4: |    sigalgs: %s",
+                       ja4->sigalgs[i]);
+    }
+
+    /* ALPN Values */
+    // handle if null
+    // if (ja4->alpn_first_value == NULL)
+    // {
+    //     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+    //                    pool->log, 0, "ssl_ja4: ALPN Value: NULL\n");
+    // }
+    // else
+    // {
+    //     ngx_log_debug1(NGX_LOG_DEBUG_EVENT,
+    //                    pool->log, 0, "ssl_ja4: ALPN Value: %s\n",
+    //                    ja4->alpn_first_value);
+    // }
 }
 
 #endif
