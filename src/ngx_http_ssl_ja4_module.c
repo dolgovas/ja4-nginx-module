@@ -184,7 +184,7 @@ int ngx_ssl_ja4(ngx_connection_t *c, ngx_pool_t *pool, ngx_ssl_ja4_t *ja4)
                 {
                     ngx_pfree(pool, ja4->ja4_ciphers[j]);
                 }
-                ngx_pfree(pool, ja4->ciphers);
+                ngx_pfree(pool, ja4->ja4_ciphers);
                 ja4->ja4_ciphers = NULL;
                 return NGX_DECLINED;
             }
